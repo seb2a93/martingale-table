@@ -34,20 +34,20 @@
 
   <div class="controls">
     <label>Bankroll
-      <input type="number" id="bankroll" value="100" step="0.01">
+      <input type="number" id="bankroll" value="100" step="0.01" inputmode="decimal" pattern="[0-9]*([.,][0-9]+)?">
     </label>
     <label>Cote
-      <input type="number" id="odds" value="1.80" step="0.01">
+      <input type="number" id="odds" value="1.80" step="0.01" inputmode="decimal" pattern="[0-9]*([.,][0-9]+)?">
     </label>
     <label>P0 (%)
-      <input type="number" id="initialPercent" value="2.19" step="0.01">
+      <input type="number" id="initialPercent" value="2.19" step="0.01" inputmode="decimal" pattern="[0-9]*([.,][0-9]+)?">
     </label>
   </div>
 
   <div class="card">
     <h1 id="levelDisplay">Palier P0</h1>
-    <p id="stakeDisplay">Mise : 2,19 €</p>
-    <p id="bankrollDisplay">Bankroll : 100,00 €</p>
+    <p id="stakeDisplay">Mise : 2,19 €</p>
+    <p id="bankrollDisplay">Bankroll : 100,00 €</p>
     <div class="actions">
       <button class="win" id="winBtn">Gagné</button>
       <button class="lose" id="loseBtn">Perdu</button>
@@ -82,9 +82,7 @@
       updateUI();
     }
 
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => selectTab(tab));
-    });
+    tabs.forEach(tab => tab.addEventListener('click', () => selectTab(tab)));
 
     function computeMise(level) {
       const bankroll = parseFloat(bankrollInput.value) || 0;
@@ -97,8 +95,8 @@
     function updateUI() {
       const mise = computeMise(currentLevel);
       levelDisplay.textContent = `Palier P${currentLevel}`;
-      stakeDisplay.textContent = `Mise : ${mise.toFixed(2)} €`;
-      bankrollDisplay.textContent = `Bankroll : ${parseFloat(bankrollInput.value).toFixed(2)} €`;
+      stakeDisplay.textContent = `Mise : ${mise.toFixed(2)} €`;
+      bankrollDisplay.textContent = `Bankroll : ${parseFloat(bankrollInput.value).toFixed(2)} €`;
       winBtn.disabled = false;
       loseBtn.disabled = false;
     }
