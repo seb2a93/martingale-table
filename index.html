@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pari Martingale</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .tabs { display: flex; gap: 10px; margin: 20px; }
+    .tab { padding: 10px 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); cursor: pointer; user-select: none; }
+    .tab.active { background: #007bff; color: #fff; }
+    .controls { width: 90%; max-width: 400px; margin-top: 10px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
+    .controls label { flex: 1 1 45%; font-size: 0.9rem; }
+    .controls input { width: 100%; padding: 6px; margin-top: 4px; border: 1px solid #ccc; border-radius: 4px; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; text-align: center; margin: 20px 0; width: 90%; max-width: 400px; }
+    .card h1 { margin: 0 0 10px; font-size: 1.5rem; color: #333; }
+    .card p { margin: 8px 0; font-size: 1.2rem; }
+    .actions { margin-top: 20px; display: flex; justify-content: space-around; }
+    .actions button { flex: 1; margin: 0 5px; padding: 12px; font-size: 1rem; border: none; border-radius: 6px; color: #fff; cursor: pointer; }
+    .actions .win { background: #28a745; }
+    .actions .win:disabled { background: #94d3a2; cursor: not-allowed; }
+    .actions .lose { background: #dc3545; }
+    .actions .lose:disabled { background: #e7a1a7; cursor: not-allowed; }
+    footer { margin: 20px 0; font-size: 0.9rem; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="tabs">
+    <div class="tab active" data-levels="5" data-multiplier="2.25569" data-initial-percent="2.19">5 paliers</div>
+    <div class="tab" data-levels="6" data-multiplier="2.23439" data-initial-percent="1">6 paliers</div>
+    <div class="tab" data-levels="7" data-multiplier="2.24222" data-initial-percent="0.44">7 paliers</div>
+  </div>
+
+  <div class="controls">
+    <label>Bankroll
+      <input type="number" id="bankroll" value="100" step="0.01">
+    </label>
+    <label>Cote
+      <input type="number" id="odds" value="1.80" step="0.01">
+    </label>
+    <label>P0 (%)
+      <input type="number" id="initialPercent" value="2.19" step="0.01">
+    </label>
+  </div>
+
+  <div class="card">
+    <h1 id="levelDisplay">Palier P0</h1>
+    <p id="stakeDisplay">Mise : 2,19 €</p>
+    <p id="bankrollDisplay">Bankroll : 100,00 €</p>
+    <div class="actions">
+      <button class="win" id="winBtn">Gagné</button>
+      <button class="lose" id="loseBtn">Perdu</button>
+    </div>
+  </div>
+
+  <footer>Martingale simplifiée</footer>
+
+  <script>
+    let currentLevel = 0;
+    let cumulativeBet = 0;
+    let numLevels = 5;
+
+    const bankrollInput = document.getElementById('bankroll');
+    const oddsInput = document.getElementById('odds');
+    const percentInput = document.getElementById('initialPercent');
+    const levelDisplay = document.getElementById('levelDisplay');
+    const stakeDisplay = document.getElementById('stakeDisplay');
+    const bankrollDisplay = document.getElementById('bankrollDisplay');
+    const winBtn = document.getElementById('winBtn');
+    const loseBtn = document.getElementById('loseBtn');
+    const tabs = document.querySelectorAll('.tab');
+
+    function selectTab(tab) {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      numLevels = parseInt(tab.getAttribute('data-levels'));
+      window.currentMultiplier = parseFloat(tab.getAttribute('data-multiplier'));
+      percentInput.value = parseFloat(tab.getAttribute('data-initial-percent'));
+      currentLevel = 0;
+      cumulativeBet = 0;
+      updateUI();
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => selectTab(tab));
+    });
+
+    function computeMise(level) {
+      const bankroll = parseFloat(bankrollInput.value) || 0;
+      const percent = parseFloat(percentInput.value) || 0;
+      const multiplier = window.currentMultiplier || 1;
+      const baseStake = (bankroll * percent) / 100;
+      return baseStake * Math.pow(multiplier, level);
+    }
+
+    function updateUI() {
+      const mise = computeMise(currentLevel);
+      levelDisplay.textContent = `Palier P${currentLevel}`;
+      stakeDisplay.textContent = `Mise : ${mise.toFixed(2)} €`;
+      bankrollDisplay.textContent = `Bankroll : ${parseFloat(bankrollInput.value).toFixed(2)} €`;
+      winBtn.disabled = false;
+      loseBtn.disabled = false;
+    }
+
+    winBtn.addEventListener('click', () => {
+      const mise = computeMise(currentLevel);
+      const odds = parseFloat(oddsInput.value) || 1;
+      const gain = mise * (odds - 1);
+      let bank = parseFloat(bankrollInput.value) || 0;
+      bank = bank - cumulativeBet + gain;
+      bankrollInput.value = bank.toFixed(2);
+      cumulativeBet = 0;
+      currentLevel = 0;
+      updateUI();
+    });
+
+    loseBtn.addEventListener('click', () => {
+      const mise = computeMise(currentLevel);
+      cumulativeBet += mise;
+      currentLevel = Math.min(currentLevel + 1, numLevels - 1);
+      updateUI();
+    });
+
+    [bankrollInput, oddsInput, percentInput].forEach(el => el.addEventListener('input', () => {
+      cumulativeBet = 0;
+      currentLevel = 0;
+      updateUI();
+    }));
+
+    // Initialisation
+    selectTab(tabs[0]);
+  </script>
+</body>
+</html>
