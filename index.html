@@ -71,6 +71,20 @@
     const loseBtn = document.getElementById('loseBtn');
     const tabs = document.querySelectorAll('.tab');
 
+    const FIELD_IDS = ['bankroll', 'odds', 'initialPercent'];
+
+    FIELD_IDS.forEach(id => {
+      const el = document.getElementById(id);
+    
+      // Recharger la valeur sauvegardée si elle existe
+      const saved = localStorage.getItem(id);
+      if (saved !== null) el.value = saved;
+    
+      // Sauvegarder à chaque modification
+      el.addEventListener('input', () => localStorage.setItem(id, el.value));
+    });
+
+
     function selectTab(tab) {
       tabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
@@ -79,8 +93,10 @@
       percentInput.value = parseFloat(tab.getAttribute('data-initial-percent'));
       currentLevel = 0;
       cumulativeBet = 0;
+      localStorage.setItem('selectedTab', tab.getAttribute('data-levels'));
       updateUI();
     }
+
 
     tabs.forEach(tab => tab.addEventListener('click', () => selectTab(tab)));
 
@@ -127,7 +143,9 @@
     }));
 
     // Initialisation
-    selectTab(tabs[0]);
+    const savedTab = localStorage.getItem('selectedTab');
+    const firstTab = [...tabs].find(t => t.getAttribute('data-levels') === savedTab) || tabs[0];
+    selectTab(firstTab);
   </script>
 </body>
 </html>
